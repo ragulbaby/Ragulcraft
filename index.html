@@ -1,3 +1,108 @@
+<!DOCTYPE HTML>
 <html>
-THIS IS A SUCCESSFUL TEST DOODE.
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script src="./three.min.js"></script>
+    <script defer="defer">
+ 	var pad;
+
+ 	function getTex(x, y){
+ 		var sheet = THREE.ImageUtils.loadTexture('./tex.png');
+ 		sheet.repeat.x = 1/16;
+ 		sheet.repeat.y = 1/16;
+ 		sheet.offset.x = (x) * sheet.repeat.x;
+		sheet.offset.y = (y) * sheet.repeat.y;
+		return sheet;
+ 	}
+
+      function run(){
+
+      	pad = navigator.webkitGetGamepads();
+
+      	if(pad[0]){
+      		if(Math.abs(pad[0].axes[2]) > 0.1){
+      			camera.rotation.y+=pad[0].axes[2] * Math.PI * -0.05;
+      		}
+      		//camera.rotation.x+=pad[0].axes[3] * Math.PI * -0.01 * Math.cos(camera.rotation.y);
+
+      		if(pad[0].axes[1] < - 0.1){
+				camera.position.x += (Math.sin(camera.rotation.y)*pad[0].axes[1]*10);
+				camera.position.z -= (-Math.cos(camera.rotation.y)*pad[0].axes[1]*10);
+			}else if(pad[0].axes[1] > 0.1){
+				camera.position.x += (Math.sin(camera.rotation.y)*pad[0].axes[1]*10);
+				camera.position.z -= (-Math.cos(camera.rotation.y)*pad[0].axes[1]*10);
+			}
+
+			if(pad[0].axes[0] < -0.1){
+				camera.position.x -= (Math.sin((camera.rotation.y-90))*pad[0].axes[0]*10);
+				camera.position.z += (-Math.cos((camera.rotation.y-90))*pad[0].axes[0]*10);
+			}else if(pad[0].axes[0] > 0.1 ){
+				camera.position.x += (Math.sin((camera.rotation.y+90))*pad[0].axes[0]*10);
+				camera.position.z -= (-Math.cos((camera.rotation.y+90))*pad[0].axes[0]*10);
+			}
+
+      		camera.position.y+=pad[0].buttons[4]*10;
+      		camera.position.y-=pad[0].buttons[5]*10;
+
+      	}
+
+        renderer.render(scene, camera);
+
+        requestAnimationFrame(function(){
+            run();
+        });
+      }
+
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      renderer.setClearColorHex( 0x000000, 1 );
+
+      var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000000);
+      camera.position.z = 0;
+      camera.position.y = 50;
+
+      var scene = new THREE.Scene();
+
+      for(i = 0; i < 10; i++){
+      	var material = new THREE.MeshLambertMaterial({
+        	map:  getTex(i,i), transparent: true, overdraw: true
+      	});
+
+      	var cube = new THREE.Mesh(new THREE.CubeGeometry(200,  200, 200), material);
+      	cube.overdraw = true;
+      	cube.position.x += (10000 * Math.random());
+      	cube.position.y += 100;
+      	cube.position.z += (10000 * Math.random());
+      	scene.add(cube);
+      }
+
+      var plane = new THREE.Mesh(new THREE.PlaneGeometry(10000, 10000),new THREE.MeshLambertMaterial({
+        	map:  getTex(2,14), transparent: true, overdraw: true
+      	}));
+      plane.overdraw = true;
+      plane.rotation.x = -Math.PI/2;
+	  plane.position.y = 0;
+	  plane.position.x += 5000;
+      scene.add(plane);
+
+      var ambientLight = new THREE.AmbientLight(0x555555);
+      scene.add(ambientLight);
+
+      var directionalLight = new THREE.DirectionalLight(0xffffff);
+      directionalLight.position.set(1, 1, 1).normalize();
+      scene.add(directionalLight);
+
+      run();
+    </script>
+  </body>
 </html>
