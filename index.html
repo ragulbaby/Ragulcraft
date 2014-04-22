@@ -197,6 +197,7 @@
 
 				//controls.update( delta );
 				pad = navigator.webkitGetGamepads();
+					
 					if(pad[0]){
       		if(Math.abs(pad[0].axes[2]) > 0.1){
       			camera.rotation.y+=pad[0].axes[2] * Math.PI * -0.05;
@@ -218,8 +219,7 @@
 				camera.position.x += (Math.sin((camera.rotation.y+90))*pad[0].axes[0]*10);
 				camera.position.z -= (-Math.cos((camera.rotation.y+90))*pad[0].axes[0]*10);
 			}
-							console.log(pad[0].buttons[4]*10);
-      		camera.position.y+=pad[0].buttons[4]*10;
+	      		camera.position.y+=pad[0].buttons[4]*10;
       		camera.position.y-=pad[0].buttons[5]*10;
 
       	}
