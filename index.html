@@ -1,33 +1,203 @@
-<!DOCTYPE HTML>
-<html>
-  <head>
-    <style>
-      body {
-        margin: 0px;
-        padding: 0px;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="container"></div>
-    <script src="./three.min.js"></script>
-    <script defer="defer">
- 	var pad;
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>RagulCraft</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				font-weight: bold;
+				text-align:center;
+			}
 
- 	function getTex(x, y){
- 		var sheet = THREE.ImageUtils.loadTexture('./tex.png');
- 		sheet.repeat.x = 1/16;
- 		sheet.repeat.y = 1/16;
- 		sheet.offset.x = (x) * sheet.repeat.x;
-		sheet.offset.y = (y) * sheet.repeat.y;
-		return sheet;
- 	}
+			a {
+				color:#0078ff;
+			}
 
-      function run(){
+			#info {
+				color:#fff;
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+				z-index:100;
+			}
+		</style>
+	</head>
+	<body>
 
-      	pad = navigator.webkitGetGamepads();
 
-      	if(pad[0]){
+		<div id="container"></div>
+
+		<script src="http://mrdoob.github.io/three.js/build/three.min.js"></script>
+
+		<script src="http://mrdoob.github.io/three.js/examples/js/controls/FirstPersonControls.js"></script>
+
+		<script src="http://mrdoob.github.io/three.js/examples/js/Detector.js"></script>
+
+		<script>
+
+			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+			var container;
+			var camera, controls, scene, renderer;
+			var light, pointLight;
+
+			var mesh;
+			var material_sphere1, material_sphere2;
+
+			var sound1, sound2;
+
+			var clock = new THREE.Clock();
+
+			var Sound = function ( sources, radius, volume ) {
+
+				var audio = document.createElement( 'audio' );
+
+				for ( var i = 0; i < sources.length; i ++ ) {
+
+					var source = document.createElement( 'source' );
+					source.src = sources[ i ];
+
+					audio.appendChild( source );
+
+				}
+
+				this.position = new THREE.Vector3();
+
+				this.play = function () {
+
+					audio.play();
+
+				}
+
+				this.update = function ( camera ) {
+
+					var distance = this.position.distanceTo( camera.position );
+
+					if ( distance <= radius ) {
+
+						audio.volume = volume * ( 1 - distance / radius );
+
+					} else {
+
+						audio.volume = 0;
+
+					}
+
+				}
+
+			}
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.getElementById( 'container' );
+
+				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.set( 0, 25, 0 );
+
+				controls = new THREE.FirstPersonControls( camera );
+
+				controls.movementSpeed = 70;
+				controls.lookSpeed = 0.05;
+				controls.noFly = true;
+				controls.lookVertical = false;
+
+				scene = new THREE.Scene();
+				scene.fog = new THREE.FogExp2( 0x000000, 0.0035 );
+
+				light = new THREE.DirectionalLight( 0xffffff );
+				light.position.set( 0, 0.5, 1 ).normalize();
+				scene.add( light );
+
+				var sphere = new THREE.SphereGeometry( 20, 32, 16 );
+
+				material_sphere1 = new THREE.MeshLambertMaterial( { color: 0xffaa00, shading: THREE.FlatShading } );
+				material_sphere2 = new THREE.MeshLambertMaterial( { color: 0xff2200, shading: THREE.FlatShading } );
+
+				// sound spheres
+
+				var s = 1;
+
+				var mesh1 = new THREE.Mesh( sphere, material_sphere1 );
+				mesh1.position.set( -250, 30, 0 );
+				mesh1.scale.set( s, s, s );
+				scene.add( mesh1 );
+
+				sound1 = new Sound( [ 'sounds/358232_j_s_song.mp3', 'sounds/358232_j_s_song.ogg' ], 275, 1 );
+				sound1.position.copy( mesh1.position );
+				sound1.play();
+
+				//
+
+				var mesh2 = new THREE.Mesh( sphere, material_sphere2 );
+				mesh2.position.set( 250, 30, 0 );
+				mesh2.scale.set( s, s, s );
+				scene.add( mesh2 );
+
+				sound2 = new Sound( [ 'sounds/376737_Skullbeatz___Bad_Cat_Maste.mp3', 'sounds/376737_Skullbeatz___Bad_Cat_Maste.ogg' ], 275, 1 );
+				sound2.position.copy( mesh2.position );
+				sound2.play();
+
+
+				// ground
+
+				var material = new THREE.MeshLambertMaterial( { color: 0x7f7566, wireframe: true, wireframeLinewidth: 1 } );
+
+				mesh = new THREE.Mesh( new THREE.PlaneGeometry( 1000, 1000, 100, 100 ), material );
+				mesh.position.y = 0.1;
+				mesh.rotation.x = - Math.PI / 2;
+				scene.add( mesh );
+
+				//
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				container.innerHTML = "";
+				container.appendChild( renderer.domElement );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				controls.handleResize();
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				render();
+
+			}
+
+
+			function render() {
+
+				var delta = clock.getDelta(),
+					time = clock.getElapsedTime() * 5;
+
+				//controls.update( delta );
+				pad = navigator.webkitGetGamepads();
+					if(pad[0]){
       		if(Math.abs(pad[0].axes[2]) > 0.1){
       			camera.rotation.y+=pad[0].axes[2] * Math.PI * -0.05;
       		}
@@ -48,61 +218,23 @@
 				camera.position.x += (Math.sin((camera.rotation.y+90))*pad[0].axes[0]*10);
 				camera.position.z -= (-Math.cos((camera.rotation.y+90))*pad[0].axes[0]*10);
 			}
-
+							console.log(pad[0].buttons[4]*10);
       		camera.position.y+=pad[0].buttons[4]*10;
       		camera.position.y-=pad[0].buttons[5]*10;
 
       	}
 
-        renderer.render(scene, camera);
+				material_sphere1.color.setHSL( 0.0, 0.3 + 0.7 * ( 1 + Math.cos( time ) ) / 2, 0.5 );
+				material_sphere2.color.setHSL( 0.1, 0.3 + 0.7 * ( 1 + Math.sin( time ) ) / 2, 0.5 );
 
-        requestAnimationFrame(function(){
-            run();
-        });
-      }
+				renderer.render( scene, camera );
 
-      var renderer = new THREE.WebGLRenderer();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(renderer.domElement);
+				sound1.update( camera );
+				sound2.update( camera );
 
-      renderer.setClearColorHex( 0x000000, 1 );
+			}
 
-      var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000000);
-      camera.position.z = 0;
-      camera.position.y = 50;
+		</script>
 
-      var scene = new THREE.Scene();
-
-      for(i = 0; i < 10; i++){
-      	var material = new THREE.MeshLambertMaterial({
-        	map:  getTex(i,i), transparent: true, overdraw: true
-      	});
-
-      	var cube = new THREE.Mesh(new THREE.CubeGeometry(200,  200, 200), material);
-      	cube.overdraw = true;
-      	cube.position.x += (10000 * Math.random());
-      	cube.position.y += 100;
-      	cube.position.z += (10000 * Math.random());
-      	scene.add(cube);
-      }
-
-      var plane = new THREE.Mesh(new THREE.PlaneGeometry(10000, 10000),new THREE.MeshLambertMaterial({
-        	map:  getTex(2,14), transparent: true, overdraw: true
-      	}));
-      plane.overdraw = true;
-      plane.rotation.x = -Math.PI/2;
-	  plane.position.y = 0;
-	  plane.position.x += 5000;
-      scene.add(plane);
-
-      var ambientLight = new THREE.AmbientLight(0x555555);
-      scene.add(ambientLight);
-
-      var directionalLight = new THREE.DirectionalLight(0xffffff);
-      directionalLight.position.set(1, 1, 1).normalize();
-      scene.add(directionalLight);
-
-      run();
-    </script>
-  </body>
+	</body>
 </html>
